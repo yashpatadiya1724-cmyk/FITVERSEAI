@@ -4,6 +4,8 @@ from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
 
+from app.routers import workout, diet, avatar, music, leaderboard, graphql_gateway
+
 app = FastAPI(
     title="FitVerse AI API",
     description="The world's most advanced AI Fitness Ecosystem Backend API",
@@ -18,6 +20,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Enterprise Routers
+app.include_router(workout.router)
+app.include_router(diet.router)
+app.include_router(avatar.router)
+app.include_router(music.router)
+app.include_router(leaderboard.router)
+app.include_router(graphql_gateway.router)
 
 class UserRegister(BaseModel):
     username: str

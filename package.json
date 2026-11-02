@@ -1,16 +1,20 @@
 {
   "name": "fitverse-ai",
   "version": "1.0.0",
-  "description": "FitVerse AI - Premium AI-Powered Fitness Ecosystem",
+  "type": "module",
+  "description": "FitVerse AI - Premium AI-Powered Fitness Ecosystem with GraphQL & Redis Leaderboards",
   "main": "index.html",
   "scripts": {
-    "dev": "npx http-server -p 8080"
+    "dev": "npx http-server -p 8080",
+    "test": "node test/graphql_leaderboard_test.js"
   },
   "keywords": [
     "fitness",
     "ai",
     "health",
     "avatar",
+    "graphql",
+    "redis",
     "glassmorphism"
   ],
   "author": "FitVerse AI Team",
