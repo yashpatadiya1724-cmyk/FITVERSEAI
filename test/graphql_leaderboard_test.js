@@ -85,6 +85,29 @@ if (redisEngine.zcard() !== 4 || redisEngine.zscore('user_05') !== null) {
 }
 console.log(`✅ Redis ZREM: Removed user_05; cardinality accurately adjusted to ${redisEngine.zcard()}`);
 
+// 7. Test zaddBatch and getPaginatedLeaderboard
+const batchCount = redisEngine.zaddBatch([
+  { userId: 'user_06', score: 45, username: 'ZenMaster' },
+  { userId: 'user_07', score: 38, username: 'BladeRunner' },
+  { userId: 'user_08', score: 22, username: 'NeonPulse' },
+  { userId: 'user_09', score: 18, username: 'ApexViper' },
+]);
+if (batchCount !== 4) throw new Error(`Expected 4 batch ingested athletes, got ${batchCount}`);
+
+const page1 = redisEngine.getPaginatedLeaderboard(1, 4);
+if (page1.athletes.length !== 4 || page1.athletes[0].username !== 'ZenMaster') {
+  throw new Error('Page 1 pagination slicing or sorting failed');
+}
+if (!page1.hasNextPage || page1.totalPages !== 2) {
+  throw new Error(`Pagination metadata mismatch: totalPages=${page1.totalPages}, hasNext=${page1.hasNextPage}`);
+}
+
+const page2 = redisEngine.getPaginatedLeaderboard(2, 4);
+if (page2.athletes.length !== 4 || page2.hasNextPage !== false) {
+  throw new Error('Page 2 boundary condition failed');
+}
+console.log(`✅ Redis zaddBatch & Pagination: Ingested 4 athletes; Paginated ${page1.totalAthletes} athletes across 2 pages seamlessly`);
+
 console.log('==================================================');
 console.log('🏆 ALL JS CLIENT TESTS PASSED (100%)');
 console.log('==================================================');

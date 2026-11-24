@@ -113,6 +113,42 @@ export class RedisLeaderboardEngine {
     const end = Math.min(all.length, userIdx + windowSize + 1);
     return all.slice(start, end);
   }
+
+  /**
+   * Batch ingests multiple athlete streaks efficiently.
+   */
+  zaddBatch(records = []) {
+    let count = 0;
+    for (const rec of records) {
+      if (rec && rec.userId) {
+        this.zadd(rec.userId, rec.score || 0, rec.username || 'Fighter');
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Returns paginated leaderboard with pagination metadata.
+   */
+  getPaginatedLeaderboard(page = 1, pageSize = 5) {
+    const validPage = Math.max(1, Number(page) || 1);
+    const validSize = Math.max(1, Number(pageSize) || 5);
+    const all = this.getTopLeaderboard(this.members.size);
+    const totalAthletes = all.length;
+    const totalPages = Math.ceil(totalAthletes / validSize) || 1;
+    const offset = (validPage - 1) * validSize;
+    const athletes = all.slice(offset, offset + validSize);
+
+    return {
+      athletes,
+      totalAthletes,
+      totalPages,
+      currentPage: validPage,
+      pageSize: validSize,
+      hasNextPage: validPage < totalPages,
+    };
+  }
 }
 
 export const leaderboardEngine = new RedisLeaderboardEngine();
