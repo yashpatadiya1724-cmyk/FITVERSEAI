@@ -124,6 +124,47 @@ def run_tests():
     assert "Yoga" in m_data["workout"] or "Chill" in m_data["music"]
     print(f"✅ AI Mood Recommendation: 'tired' -> '{m_data['workout']}' with '{m_data['music']}'")
 
+    # 8. Avatar State, Customization & Evolution Test
+    avatar_get = client.get("/api/avatar/")
+    assert avatar_get.status_code == 200
+    av_data = avatar_get.json()
+    assert av_data["level"] == 3
+    assert av_data["gender"] == "Male"
+    print(f"✅ Avatar Profile: Level {av_data['level']} {av_data['evolution_stage']} ({av_data['outfit']})")
+
+    avatar_update = client.put("/api/avatar/update", json={
+        "body_type": "Fit",
+        "hair_style": "cyber_undercut",
+        "outfit": "plasma_nano_suit"
+    })
+    assert avatar_update.status_code == 200
+    up_av = avatar_update.json()
+    assert up_av["avatar"]["hair_style"] == "cyber_undercut"
+    print("✅ Avatar Customization: Updated hair to 'cyber_undercut' and outfit to 'plasma_nano_suit'")
+
+    avatar_evolve = client.post("/api/avatar/evolve?xp=750&weight_change=-2.5")
+    assert avatar_evolve.status_code == 200
+    ev_data = avatar_evolve.json()
+    assert ev_data["new_level"] == 7
+    assert ev_data["evolved"] is True
+    assert len(ev_data["unlocked_accessories"]) >= 2
+    print(f"✅ Avatar Evolution: 750 XP -> Level {ev_data['new_level']} with {len(ev_data['unlocked_accessories'])} unlocked accessories")
+
+    # 9. Music Recommendations & Mood Filtering Test
+    music_mot = client.get("/api/music/recommendations?mood=motivated")
+    assert music_mot.status_code == 200
+    mot_tracks = music_mot.json()
+    assert len(mot_tracks) >= 2
+    assert all(t["mood"] == "motivated" for t in mot_tracks)
+    print(f"✅ Music Recommendations: Found {len(mot_tracks)} high-energy tracks for 'motivated' mood")
+
+    music_sad = client.get("/api/music/recommendations?mood=sad")
+    assert music_sad.status_code == 200
+    sad_tracks = music_sad.json()
+    assert len(sad_tracks) >= 1
+    assert sad_tracks[0]["title"] == "Midnight Zen"
+    print(f"✅ Music Mood Filter: Retrieved '{sad_tracks[0]['title']}' by {sad_tracks[0]['artist']}")
+
     print("==================================================")
     print("🏆 ALL FITVERSE AI ENTERPRISE TESTS PASSED (100%)")
     print("==================================================")

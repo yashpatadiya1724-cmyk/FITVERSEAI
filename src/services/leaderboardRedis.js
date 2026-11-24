@@ -58,6 +58,21 @@ export class RedisLeaderboardEngine {
     const index = top.findIndex(([id]) => id === userId);
     return index !== -1 ? index + 1 : null;
   }
+
+  /**
+   * Redis ZSCORE command: Returns score of a member.
+   */
+  zscore(userId) {
+    const member = this.members.get(userId);
+    return member ? member.score : null;
+  }
+
+  /**
+   * Redis ZCARD command: Returns the cardinality (number of elements) in the sorted set.
+   */
+  zcard() {
+    return this.members.size;
+  }
 }
 
 export const leaderboardEngine = new RedisLeaderboardEngine();
