@@ -108,6 +108,31 @@ if (page2.athletes.length !== 4 || page2.hasNextPage !== false) {
 }
 console.log(`✅ Redis zaddBatch & Pagination: Ingested 4 athletes; Paginated ${page1.totalAthletes} athletes across 2 pages seamlessly`);
 
+// 8. Test ZCOUNT, getTierDistribution, and clear
+// Athletes in redisEngine currently:
+// user_06 (45), user_07 (38), user_04 (30) -> 3 CyberImmortal (>= 30)
+// user_02 (25), user_08 (22), user_09 (18) -> 3 NeonVeteran (15 - 29)
+// user_03 (8) -> 1 StreetFighter (5 - 14)
+// user_01 (0) -> 1 Rookie (< 5)
+// Total: 8 athletes
+const countAbove30 = redisEngine.zcount(30, Infinity);
+if (countAbove30 !== 3) {
+  throw new Error(`Expected 3 athletes with score >= 30, got ${countAbove30}`);
+}
+
+const tierDist = redisEngine.getTierDistribution();
+if (tierDist.cyberImmortal !== 3 || tierDist.neonVeteran !== 3 || tierDist.streetFighter !== 1 || tierDist.rookie !== 1) {
+  throw new Error(`Tier distribution mismatch: ${JSON.stringify(tierDist)}`);
+}
+console.log(`✅ Redis ZCOUNT & Tiers: Found ${countAbove30} elite athletes; Distribution: ${tierDist.cyberImmortal} Immortals, ${tierDist.neonVeteran} Veterans, ${tierDist.streetFighter} Street Fighters, ${tierDist.rookie} Rookies`);
+
+// Test clear
+const clearedCount = redisEngine.clear();
+if (clearedCount !== 8 || redisEngine.zcard() !== 0) {
+  throw new Error(`Expected 8 cleared athletes, got ${clearedCount} (current size: ${redisEngine.zcard()})`);
+}
+console.log(`✅ Redis clear: Flushed ${clearedCount} athletes; leaderboard cardinality verified at 0`);
+
 console.log('==================================================');
 console.log('🏆 ALL JS CLIENT TESTS PASSED (100%)');
 console.log('==================================================');
