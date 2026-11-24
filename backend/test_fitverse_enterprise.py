@@ -83,6 +83,47 @@ def run_tests():
     print(f"✅ GraphQL Field Filter: Raw {perf['raw_bytes']}B -> Filtered {perf['filtered_bytes']}B ({savings_str} cellular savings)")
     assert savings_val > 50.0, f"Expected >50% savings, got {savings_val}%"
 
+    # 5. AI Workout Protocol Generation Test
+    workout_res = client.post("/api/ai/workout", json={
+        "age": 26,
+        "height": 178.5,
+        "weight": 74.0,
+        "goal": "hypertrophy",
+        "experience": "intermediate",
+        "equipment": ["barbell", "dumbbells", "cables"],
+        "injury": None
+    })
+    assert workout_res.status_code == 200
+    w_data = workout_res.json()
+    assert "HYPERTROPHY" in w_data["title"]
+    assert len(w_data["schedule"]) >= 2
+    assert w_data["estimated_duration"] > 0
+    assert w_data["estimated_calories"] > 0
+    print(f"✅ AI Workout Protocol: Generated '{w_data['title']}' ({w_data['estimated_duration']} min, {w_data['estimated_calories']} kcal)")
+
+    # 6. AI Diet & Macro Protocol Generation Test
+    diet_res = client.post("/api/ai/diet", json={
+        "country": "India",
+        "budget": "medium",
+        "allergies": ["peanuts"],
+        "preference": "high_protein",
+        "target_calories": 2400.0
+    })
+    assert diet_res.status_code == 200
+    d_data = diet_res.json()
+    assert d_data["target_calories"] == 2400.0
+    assert "protein" in d_data["macros"]
+    assert "lunch" in d_data["meals"]
+    assert len(d_data["shopping_list"]) >= 5
+    print(f"✅ AI Diet Protocol: Target {d_data['target_calories']} kcal, {d_data['macros']['protein']} protein, {len(d_data['shopping_list'])} grocery items")
+
+    # 7. AI Mood-Based Adaptive Recommendation Test
+    mood_res = client.post("/api/ai/mood-recommendation?mood=tired")
+    assert mood_res.status_code == 200
+    m_data = mood_res.json()
+    assert "Yoga" in m_data["workout"] or "Chill" in m_data["music"]
+    print(f"✅ AI Mood Recommendation: 'tired' -> '{m_data['workout']}' with '{m_data['music']}'")
+
     print("==================================================")
     print("🏆 ALL FITVERSE AI ENTERPRISE TESTS PASSED (100%)")
     print("==================================================")
