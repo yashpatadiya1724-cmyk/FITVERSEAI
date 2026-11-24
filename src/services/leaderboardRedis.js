@@ -149,6 +149,54 @@ export class RedisLeaderboardEngine {
       hasNextPage: validPage < totalPages,
     };
   }
+
+  /**
+   * Redis ZCOUNT command: Returns count of athletes with score between minScore and maxScore.
+   */
+  zcount(minScore = -Infinity, maxScore = Infinity) {
+    let count = 0;
+    for (const data of this.members.values()) {
+      if (data.score >= minScore && data.score <= maxScore) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * Returns tier breakdown distribution for gamification and ranking badges.
+   */
+  getTierDistribution() {
+    let cyberImmortal = 0; // >= 30
+    let neonVeteran = 0;   // 15 - 29
+    let streetFighter = 0; // 5 - 14
+    let rookie = 0;        // < 5
+
+    for (const data of this.members.values()) {
+      const s = data.score;
+      if (s >= 30) cyberImmortal++;
+      else if (s >= 15) neonVeteran++;
+      else if (s >= 5) streetFighter++;
+      else rookie++;
+    }
+
+    return {
+      cyberImmortal,
+      neonVeteran,
+      streetFighter,
+      rookie,
+      totalAthletes: this.members.size,
+    };
+  }
+
+  /**
+   * Clears all leaderboard members.
+   */
+  clear() {
+    const size = this.members.size;
+    this.members.clear();
+    return size;
+  }
 }
 
 export const leaderboardEngine = new RedisLeaderboardEngine();
