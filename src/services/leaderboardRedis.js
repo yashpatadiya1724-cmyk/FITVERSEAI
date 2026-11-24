@@ -73,6 +73,46 @@ export class RedisLeaderboardEngine {
   zcard() {
     return this.members.size;
   }
+
+  /**
+   * Redis ZREM command: Removes member from the sorted set.
+   */
+  zrem(userId) {
+    return this.members.delete(userId);
+  }
+
+  /**
+   * Resets member streak score to 0 upon broken streak.
+   */
+  zscoreReset(userId) {
+    const member = this.members.get(userId);
+    if (!member) return false;
+    this.members.set(userId, { ...member, score: 0 });
+    return true;
+  }
+
+  /**
+   * Returns contextual ranking window around target athlete for focused UI view.
+   */
+  getRankAroundUser(userId, windowSize = 1) {
+    const userRank = this.zrevrank(userId);
+    if (!userRank) return null;
+
+    const all = Array.from(this.members.entries())
+      .map(([id, data]) => ({
+        userId: id,
+        username: data.username,
+        streakDays: data.score,
+        xpPoints: data.score * 50,
+      }))
+      .sort((a, b) => b.streakDays - a.streakDays)
+      .map((entry, idx) => ({ rank: idx + 1, ...entry }));
+
+    const userIdx = userRank - 1;
+    const start = Math.max(0, userIdx - windowSize);
+    const end = Math.min(all.length, userIdx + windowSize + 1);
+    return all.slice(start, end);
+  }
 }
 
 export const leaderboardEngine = new RedisLeaderboardEngine();

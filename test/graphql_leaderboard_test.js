@@ -60,6 +60,31 @@ if (plan.exercises[0].videoDemoUrl !== undefined) {
 }
 console.log(`✅ GraphQL Field Filter: Returned '${plan.splitName}' with ${plan.exercises.length} exercises (reps and name only, 3D/video stripped)`);
 
+// 6. Test ZREM, ZSCORERESET, and getRankAroundUser
+redisEngine.zadd('user_04', 30, 'GhostTitan');
+redisEngine.zadd('user_05', 5, 'RookieSparrow');
+const windowAthletes = redisEngine.getRankAroundUser('user_01', 1);
+if (!windowAthletes || windowAthletes.length < 2) {
+  throw new Error('Expected at least 2 athletes in contextual rank window');
+}
+const userInWindow = windowAthletes.find(a => a.userId === 'user_01');
+if (!userInWindow || userInWindow.rank !== 3) {
+  throw new Error(`Expected user_01 rank 3 in updated leaderboard, got ${userInWindow?.rank}`);
+}
+console.log(`✅ Redis getRankAroundUser: Retrieved ${windowAthletes.length}-athlete window around user_01 (Rank #${userInWindow.rank})`);
+
+redisEngine.zscoreReset('user_01');
+if (redisEngine.zscore('user_01') !== 0) {
+  throw new Error('Failed to reset user_01 score to 0');
+}
+console.log(`✅ Redis zscoreReset: Reset user_01 streak score to 0 successfully`);
+
+redisEngine.zrem('user_05');
+if (redisEngine.zcard() !== 4 || redisEngine.zscore('user_05') !== null) {
+  throw new Error('Failed to remove user_05 from leaderboard');
+}
+console.log(`✅ Redis ZREM: Removed user_05; cardinality accurately adjusted to ${redisEngine.zcard()}`);
+
 console.log('==================================================');
 console.log('🏆 ALL JS CLIENT TESTS PASSED (100%)');
 console.log('==================================================');
